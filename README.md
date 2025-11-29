@@ -13,4 +13,4 @@ Bu proje, internet bağlantısına ihtiyaç duymadan yerel bilgisayar üzerinde 
 1. Depoyu klonlayın veya indirin.
 2. Gerekli kütüphaneleri yükleyin:
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements.txt# local-rag-tinyllama
