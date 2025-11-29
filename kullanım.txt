@@ -1,0 +1,28 @@
+Sistemi çalıştırmak için aşağıdaki adımları sırasıyla uygulayın:
+
+
+Adım 1: Veri Setini Oluşturun Örnek Alzheimer veri setini oluşturmak için:
+
+python 1_veri_olustur.py
+
+
+Adım 2: Vektör Veritabanını Kurun Metin verisini işleyip yapay zekanın hafızasına kaydetmek için:
+
+python 2_veritabani_olustur.py
+
+
+Adım 3: Asistanı Başlatın Sohbet botunu başlatmak için:
+
+python 3_rag_chat_baslat.py
+
+
+
+📚 Kullanılan Teknolojiler
+
+LLM: TinyLlama-1.1B-Chat
+
+Orkestrasyon: LangChain
+
+Veritabanı: FAISS
+
+Embedding: sentence-transformers (Multilingual)
