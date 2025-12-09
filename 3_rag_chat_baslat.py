@@ -8,11 +8,12 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from deep_translator import GoogleTranslator  # <--- YENİ OYUNCUMUZ
 import os
 import sys
 
-# --- 1. MODEL AYARLARI ---
-print("🚀 Sistem Başlatılıyor... (DİKTATÖR MODU)")
+# --- 1. AYARLAR ---
+print("🚀 Sistem TinyLlama + Tercüman Modu ile başlatılıyor...")
 
 model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
@@ -23,42 +24,42 @@ pipe = pipeline(
     device_map="auto",
     max_new_tokens=256,
     do_sample=True,
-    temperature=0.1,          # Yaratıcılık KAPALI. Sadece okuduğunu söyler.
+    temperature=0.3,          # İngilizce konuşacağı için rahat olabilir
     top_p=0.90,
-    repetition_penalty=1.2    # Tekrar etmeyi engeller.
+    repetition_penalty=1.2
 )
 llm = HuggingFacePipeline(pipeline=pipe)
 
-# --- 2. HAFIZA YÜKLEME ---
+embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+
+# --- 2. HAFIZA ---
 print("📚 Hafıza yükleniyor...")
 if not os.path.exists("alzheimer_veri.txt"):
-    print("❌ HATA: Veri dosyası yok! Önce 1_veri_olustur.py çalıştır.")
+    print("❌ HATA: 'alzheimer_veri.txt' yok! Önce 1_veri_olustur.py çalıştır.")
     sys.exit()
 
 loader = TextLoader("alzheimer_veri.txt", encoding="utf-8")
 docs = loader.load()
 
-# Chunk'ları büyüttük (500) ki konu bütünlüğü bozulmasın
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 parcalar = text_splitter.split_documents(docs)
 
-embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 vector_store = FAISS.from_documents(parcalar, embedding_model)
 print("✅ Hafıza hazır!")
 
-# --- 3. SERT PROMPT (YORUM YOK, SADECE OKU) ---
+# --- 3. PROMPT (TAMAMEN İNGİLİZCE) ---
+# Modele İngilizce davranıyoruz ki kafası karışmasın.
 template = """<|system|>
-You are a strict assistant. 
-Read the Turkish CONTEXT below.
-Answer the QUESTION using ONLY the CONTEXT.
-If the answer is not in the context, say "Bilmiyorum".
-Answer in TURKISH.
+You are a helpful assistant. 
+Use the Context below to answer the Question.
+If the answer is not in the context, say "I don't know".
+Keep your answer short and concise.
 
-CONTEXT:
+Context:
 {context}
 </s>
 <|user|>
-QUESTION: {question}
+Question: {question}
 </s>
 <|assistant|>
 """
@@ -72,33 +73,42 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": PROMPT}
 )
 
-# --- 4. CEVAP TEMİZLEME ---
-def cevapla(soru):
-    if not soru:
+# --- 4. TERCÜMAN FONKSİYONU ---
+def cevapla(soru_tr):
+    if not soru_tr:
         return ""
     
-    ham_cevap = qa_chain.invoke({"query": soru})
-    metin = ham_cevap["result"]
-    
-    # Modelin teknik etiketlerini temizle
-    if "<|assistant|>" in metin:
-        temiz_cevap = metin.split("<|assistant|>")[-1]
-    else:
-        temiz_cevap = metin
+    try:
+        # 1. Soruyu Türkçeden İngilizceye çevir
+        print(f"🇹🇷 Gelen Soru: {soru_tr}")
+        soru_en = GoogleTranslator(source='tr', target='en').translate(soru_tr)
+        print(f"🇺🇸 Çevrilen Soru: {soru_en}")
 
-    # Eğer İngilizce başlarsa uyar
-    if "Sure!" in temiz_cevap or "Here is" in temiz_cevap:
-        return "⚠️ Model İngilizceye kaçtı. Lütfen soruyu 'Araba kullanabilir mi?' şeklinde net sorun."
+        # 2. Modele İngilizce sor
+        ham_cevap = qa_chain.invoke({"query": soru_en})
+        cevap_en = ham_cevap["result"]
         
-    return temiz_cevap.strip()
+        # Temizlik (Teknik etiketleri at)
+        if "<|assistant|>" in cevap_en:
+            cevap_en = cevap_en.split("<|assistant|>")[-1]
+        
+        print(f"🤖 Model Cevabı (EN): {cevap_en.strip()}")
+
+        # 3. Cevabı Türkçeye çevir
+        cevap_tr = GoogleTranslator(source='en', target='tr').translate(cevap_en)
+        print(f"🇹🇷 Sonuç: {cevap_tr}")
+
+        return cevap_tr
+    except Exception as e:
+        return f"Hata oluştu: {str(e)}"
 
 # --- 5. ARAYÜZ ---
 arayuz = gr.Interface(
     fn=cevapla,
-    inputs=gr.Textbox(lines=2, placeholder="Örn: Araba kullanabilir mi?"),
-    outputs=gr.Textbox(label="Cevap"),
-    title="🧠 Alzheimer Asistanı (Sıkı Yönetim)",
-    description="Sadece veri tabanındaki doğru bilgileri verir. Uydurmaz."
+    inputs=gr.Textbox(lines=2, placeholder="Örn: Annem banyo yapmak istemiyor, ne yapmalıyım?"),
+    outputs=gr.Textbox(label="Türkçe Cevap"),
+    title="🧠 TinyLlama Türkçe Asistanı (Tercümanlı)",
+    description="Siz Türkçe sorun, TinyLlama İngilizce düşünsün, biz size Türkçe söyleyelim."
 )
 
 if __name__ == "__main__":
