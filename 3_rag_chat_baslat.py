@@ -5,14 +5,17 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
+from langchain_community.document_loaders import TextLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 import warnings
 import sys
+import os
 
 # Uyarıları gizle
 warnings.filterwarnings("ignore")
 
 def chat_baslat():
-    print("🚀 TinyLlama RAG Asistanı başlatılıyor... (Düzeltilmiş Versiyon)")
+    print("🚀 Masaüstü Asistanı Başlatılıyor... (Keskin Nişancı Modu)")
 
     # 1. BEYİN (TinyLlama)
     print("🧠 Model yükleniyor...")
@@ -21,13 +24,14 @@ def chat_baslat():
     pipe = pipeline(
         "text-generation",
         model=model_id,
+        # Mac için float32 (Windows ise bfloat16 denenebilir ama float32 garantidir)
         torch_dtype=torch.float32, 
         device_map="auto",
         max_new_tokens=256,
         do_sample=True,
-        temperature=0.2,    # Daha tutarlı olması için düşürdük
-        top_p=0.95,
-        repetition_penalty=1.15  # <--- İŞTE SİHİRLİ AYAR! (Tekrar etmeyi engeller)
+        temperature=0.1,         # Yaratıcılık kapalı (Ciddiyet modu)
+        top_p=0.90,
+        repetition_penalty=1.2   # Papağan modunu engelle
     )
     llm = HuggingFacePipeline(pipeline=pipe)
 
@@ -35,24 +39,27 @@ def chat_baslat():
     print("📚 Hafıza yükleniyor...")
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     
+    # Hafıza klasörünü kontrol et
+    if not os.path.exists("faiss_index_alzheimer_tr"):
+        print("❌ HATA: Hafıza bulunamadı! Önce '2_veritabani_olustur.py' çalıştırın.")
+        return
+
     try:
-        # Güvenlik uyarısını aşmak için allow_dangerous_deserialization=True
         vector_store = FAISS.load_local("faiss_index_alzheimer_tr", embedding_model, allow_dangerous_deserialization=True)
     except:
-        # Eski versiyonlar için yedek
         vector_store = FAISS.load_local("faiss_index_alzheimer_tr", embedding_model)
 
-    # 3. KURAL (PROMPT) - TinyLlama'nın Kendi Özel Formatı
-    # Bu format modelin nerede durması gerektiğini netleştirir.
+    # 3. KATI PROMPT (YÖNERGE)
     template = """<|system|>
-Sen yardımcı bir asistansın. Aşağıdaki bağlamı (Context) kullanarak soruyu cevapla.
-Cevabı verdikten sonra dur. Sadece TÜRKÇE konuş.
+Sen uzman bir Alzheimer asistanısın. SANA VERİLEN BAĞLAMI TEKRAR ETME.
+Aşağıdaki bilgiyi analiz et ve soruya kısa, net bir Türkçe cevap ver.
+Cevabı verdikten sonra hemen sus.
 
-Bağlam:
+Bilgi (Bağlam):
 {context}
 </s>
 <|user|>
-{question}
+Soru: {question}
 </s>
 <|assistant|>
 """
@@ -63,14 +70,15 @@ Bağlam:
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=vector_store.as_retriever(search_kwargs={"k": 3}),
+        retriever=vector_store.as_retriever(search_kwargs={"k": 2}), # Sadece en alakalı 2 parça
         chain_type_kwargs={"prompt": PROMPT}
     )
 
     print("\n" + "*"*50)
-    print("🤖 ASİSTAN HAZIR! (Çıkmak için 'q' yazın)")
+    print("🤖 UZMAN ASİSTAN HAZIR! (Çıkmak için 'q' yazın)")
     print("*"*50)
 
+    # 5. SOHBET DÖNGÜSÜ
     while True:
         try:
             soru = input("\n🤔 Sorunuz: ")
@@ -80,19 +88,24 @@ Bağlam:
             if not soru.strip():
                 continue
             
-            print("... Yanıt hazırlanıyor ...")
-            # invoke yerine __call__ veya run kullanarak eski versiyon uyumluluğunu artıralım
-            sonuc = qa_chain.invoke({"query": soru})
+            print("... Analiz ediliyor ...")
             
+            # Cevabı al
+            ham_cevap = qa_chain.invoke({"query": soru})
+            metin = ham_cevap['result']
+
+            # --- TEMİZLİK ROBOTU ---
+            # Cevabın içindeki teknik etiketleri ve tekrarları temizle
+            if "<|assistant|>" in metin:
+                temiz_cevap = metin.split("<|assistant|>")[-1]
+            else:
+                temiz_cevap = metin
+            
+            if "Bağlam:" in temiz_cevap:
+                temiz_cevap = temiz_cevap.split("Bağlam:")[0]
+
             print("-" * 40)
-            # Cevabın sadece ilgili kısmını alıp temizleyelim
-            cevap = sonuc['result']
-            
-            # Eğer model yine de saçmalarsa temizlemek için ek güvenlik:
-            if "<|assistant|>" in cevap:
-                cevap = cevap.split("<|assistant|>")[-1]
-            
-            print(f"🗣️  CEVAP: {cevap.strip()}")
+            print(f"🗣️  CEVAP: {temiz_cevap.strip()}")
             print("-" * 40)
             
         except KeyboardInterrupt:
