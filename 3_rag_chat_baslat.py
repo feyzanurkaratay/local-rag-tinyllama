@@ -11,8 +11,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 import sys
 
-# --- 1. AYARLAR ---
-print("🚀 Sistem Başlatılıyor... (Genel Uzman Modu)")
+# --- 1. MODEL AYARLARI ---
+print("🚀 Sistem Başlatılıyor... (DİKTATÖR MODU)")
 
 model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
@@ -21,94 +21,84 @@ pipe = pipeline(
     model=model_id,
     torch_dtype=torch.float32,
     device_map="auto",
-    max_new_tokens=512,       # Daha uzun cevaplar verebilsin
+    max_new_tokens=256,
     do_sample=True,
-    temperature=0.4,          # Yaratıcılığı artırdık (Daha doğal konuşsun)
-    top_p=0.92,
-    repetition_penalty=1.1
+    temperature=0.1,          # Yaratıcılık KAPALI. Sadece okuduğunu söyler.
+    top_p=0.90,
+    repetition_penalty=1.2    # Tekrar etmeyi engeller.
 )
 llm = HuggingFacePipeline(pipeline=pipe)
 
-# --- 2. HAFIZA ---
+# --- 2. HAFIZA YÜKLEME ---
 print("📚 Hafıza yükleniyor...")
-# Veri dosyası varsa yükle, yoksa hata verme (Sadece genel bilgiyle çalışabilsin diye)
-vector_store = None
-if os.path.exists("alzheimer_veri.txt"):
-    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-    loader = TextLoader("alzheimer_veri.txt", encoding="utf-8")
-    docs = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=40)
-    parcalar = text_splitter.split_documents(docs)
-    vector_store = FAISS.from_documents(parcalar, embedding_model)
-    print("✅ Yerel veri kaynağı (RAG) yüklendi.")
-else:
-    print("⚠️ UYARI: Veri dosyası bulunamadı. Model sadece genel bilgisiyle cevap verecek.")
+if not os.path.exists("alzheimer_veri.txt"):
+    print("❌ HATA: Veri dosyası yok! Önce 1_veri_olustur.py çalıştır.")
+    sys.exit()
 
-# --- 3. HİBRİT PROMPT (KİLİT NOKTA) ---
-# Modele diyoruz ki: Önce elindeki nota bak, orada yoksa bildiğin gibi anlat.
+loader = TextLoader("alzheimer_veri.txt", encoding="utf-8")
+docs = loader.load()
+
+# Chunk'ları büyüttük (500) ki konu bütünlüğü bozulmasın
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+parcalar = text_splitter.split_documents(docs)
+
+embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+vector_store = FAISS.from_documents(parcalar, embedding_model)
+print("✅ Hafıza hazır!")
+
+# --- 3. SERT PROMPT (YORUM YOK, SADECE OKU) ---
 template = """<|system|>
-Sen Alzheimer konusunda uzman, yardımsever bir asistansın.
-Sana bir BAĞLAM (Context) verilecek. 
-Önce bu bağlamdaki bilgileri kullan. Eğer sorunun cevabı bağlamda yoksa, KENDİ GENEL BİLGİNİ kullanarak cevapla.
-Her zaman TÜRKÇE cevap ver.
+You are a strict assistant. 
+Read the Turkish CONTEXT below.
+Answer the QUESTION using ONLY the CONTEXT.
+If the answer is not in the context, say "Bilmiyorum".
+Answer in TURKISH.
 
-BAĞLAM:
+CONTEXT:
 {context}
 </s>
 <|user|>
-SORU: {question}
+QUESTION: {question}
 </s>
 <|assistant|>
 """
 
 PROMPT = PromptTemplate(template=template, input_variables=["context", "question"])
 
-# --- 4. ZİNCİRİ KUR ---
-if vector_store:
-    retriever = vector_store.as_retriever(search_kwargs={"k": 2})
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever,
-        chain_type_kwargs={"prompt": PROMPT}
-    )
-else:
-    # Eğer veritabanı yoksa düz LLM zinciri (Fallback)
-    qa_chain = None 
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=vector_store.as_retriever(search_kwargs={"k": 2}),
+    chain_type_kwargs={"prompt": PROMPT}
+)
 
-# --- 5. CEVAP FONKSİYONU ---
+# --- 4. CEVAP TEMİZLEME ---
 def cevapla(soru):
     if not soru:
         return ""
     
-    try:
-        if qa_chain:
-            # RAG ile cevapla (Veri + Genel Bilgi)
-            ham_cevap = qa_chain.invoke({"query": soru})
-            metin = ham_cevap["result"]
-        else:
-            # Sadece modelin kendi bilgisiyle cevapla
-            prompt = f"<|user|>\n{soru}\n</s>\n<|assistant|>\n"
-            metin = pipe(prompt)[0]['generated_text']
+    ham_cevap = qa_chain.invoke({"query": soru})
+    metin = ham_cevap["result"]
+    
+    # Modelin teknik etiketlerini temizle
+    if "<|assistant|>" in metin:
+        temiz_cevap = metin.split("<|assistant|>")[-1]
+    else:
+        temiz_cevap = metin
 
-        # Temizlik
-        if "<|assistant|>" in metin:
-            temiz_cevap = metin.split("<|assistant|>")[-1]
-        else:
-            temiz_cevap = metin
-
-        return temiz_cevap.strip()
+    # Eğer İngilizce başlarsa uyar
+    if "Sure!" in temiz_cevap or "Here is" in temiz_cevap:
+        return "⚠️ Model İngilizceye kaçtı. Lütfen soruyu 'Araba kullanabilir mi?' şeklinde net sorun."
         
-    except Exception as e:
-        return f"Hata oluştu: {str(e)}"
+    return temiz_cevap.strip()
 
-# --- 6. ARAYÜZ ---
+# --- 5. ARAYÜZ ---
 arayuz = gr.Interface(
     fn=cevapla,
-    inputs=gr.Textbox(lines=2, placeholder="Örn: Alzheimer hastaları araba kullanabilir mi?"),
-    outputs=gr.Textbox(label="Uzman Cevabı"),
-    title="🧠 Alzheimer Uzman Asistanı (Geniş Kapsamlı)",
-    description="Hem yüklenen verileri hem de genel tıbbi bilgiyi kullanarak cevap verir."
+    inputs=gr.Textbox(lines=2, placeholder="Örn: Araba kullanabilir mi?"),
+    outputs=gr.Textbox(label="Cevap"),
+    title="🧠 Alzheimer Asistanı (Sıkı Yönetim)",
+    description="Sadece veri tabanındaki doğru bilgileri verir. Uydurmaz."
 )
 
 if __name__ == "__main__":
