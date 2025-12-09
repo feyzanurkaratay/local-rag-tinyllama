@@ -1,8 +1,10 @@
 torch
 transformers
 accelerate
-langchain
-langchain-community
-langchain-huggingface
-faiss-cpu
+langchain==0.1.10
+langchain-community==0.0.25
+langchain-core==0.1.30
 sentence-transformers
+faiss-cpu
+pypdf
+deep_translator
