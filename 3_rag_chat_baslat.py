@@ -12,7 +12,7 @@ import sys
 warnings.filterwarnings("ignore")
 
 def chat_baslat():
-    print("🚀 TinyLlama RAG Asistanı başlatılıyor... Lütfen bekleyin.")
+    print("🚀 TinyLlama RAG Asistanı başlatılıyor... (Düzeltilmiş Versiyon)")
 
     # 1. BEYİN (TinyLlama)
     print("🧠 Model yükleniyor...")
@@ -21,38 +21,41 @@ def chat_baslat():
     pipe = pipeline(
         "text-generation",
         model=model_id,
-        # Mac M1/M2/M3 çipleri için float32 kararlılığı sağlar
         torch_dtype=torch.float32, 
         device_map="auto",
         max_new_tokens=256,
         do_sample=True,
-        temperature=0.3,
-        top_p=0.95
+        temperature=0.2,    # Daha tutarlı olması için düşürdük
+        top_p=0.95,
+        repetition_penalty=1.15  # <--- İŞTE SİHİRLİ AYAR! (Tekrar etmeyi engeller)
     )
     llm = HuggingFacePipeline(pipeline=pipe)
 
     # 2. HAFIZA
     print("📚 Hafıza yükleniyor...")
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    
     try:
+        # Güvenlik uyarısını aşmak için allow_dangerous_deserialization=True
         vector_store = FAISS.load_local("faiss_index_alzheimer_tr", embedding_model, allow_dangerous_deserialization=True)
-    except Exception:
-        # Eski langchain versiyonları için fallback
+    except:
+        # Eski versiyonlar için yedek
         vector_store = FAISS.load_local("faiss_index_alzheimer_tr", embedding_model)
 
-    # 3. KURAL (PROMPT)
-    template = """### Instruction:
-    You are a helpful assistant. Use the context below to answer the question.
-    The context is in English or Turkish. You must translate your reasoning and provide the final answer in TURKISH language.
-    If the answer is not in the context, just say "Verilen metinde bu bilgi yok."
+    # 3. KURAL (PROMPT) - TinyLlama'nın Kendi Özel Formatı
+    # Bu format modelin nerede durması gerektiğini netleştirir.
+    template = """<|system|>
+Sen yardımcı bir asistansın. Aşağıdaki bağlamı (Context) kullanarak soruyu cevapla.
+Cevabı verdikten sonra dur. Sadece TÜRKÇE konuş.
 
-    ### Context:
-    {context}
-
-    ### Question:
-    {question}
-
-    ### Turkish Answer:"""
+Bağlam:
+{context}
+</s>
+<|user|>
+{question}
+</s>
+<|assistant|>
+"""
 
     PROMPT = PromptTemplate(template=template, input_variables=["context", "question"])
 
@@ -78,9 +81,18 @@ def chat_baslat():
                 continue
             
             print("... Yanıt hazırlanıyor ...")
+            # invoke yerine __call__ veya run kullanarak eski versiyon uyumluluğunu artıralım
             sonuc = qa_chain.invoke({"query": soru})
+            
             print("-" * 40)
-            print(f"🗣️  CEVAP: {sonuc['result'].strip()}")
+            # Cevabın sadece ilgili kısmını alıp temizleyelim
+            cevap = sonuc['result']
+            
+            # Eğer model yine de saçmalarsa temizlemek için ek güvenlik:
+            if "<|assistant|>" in cevap:
+                cevap = cevap.split("<|assistant|>")[-1]
+            
+            print(f"🗣️  CEVAP: {cevap.strip()}")
             print("-" * 40)
             
         except KeyboardInterrupt:
