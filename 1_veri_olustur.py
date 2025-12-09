@@ -2,79 +2,54 @@ import os
 
 def veri_dosyasi_olustur():
     """
-    RAG sistemi için AKADEMİK + PRATİK hibrit Alzheimer verisi oluşturur.
+    TinyLlama için 'Mega Ansiklopedi' verisi. 
+    Araba kullanımı, banyo, yemek, saldırganlık vb. her şey burada yazıyor.
     """
     metin = """
-BAŞLIK: ALZHEIMER HASTALIĞI: AKADEMİK, KLİNİK VE PRATİK BAKIM ANSİKLOPEDİSİ
+BAŞLIK: ALZHEIMER HASTALIĞI HAKKINDA HER ŞEY (KAPSAMLI REHBER)
 
-BÖLÜM 1: AKADEMİK BİLGİLER VE PATOFİZYOLOJİ
-Tanım: Alzheimer, bilişsel fonksiyonlarda (hafıza, dil, görsel-uzamsal beceriler) ilerleyici yıkıma neden olan nörodejeneratif bir hastalıktır.
-Nörobiyolojik Mekanizmalar:
-1. Amiloid Plakları (Ekstraselüler): Beta-amiloid proteininin yanlış katlanarak nöronlar arasında birikmesi, sinaptik iletişimi bozar ve hücre ölümünü tetikler.
-2. Nörofibriler Yumaklar (Intraselüler): 'Tau' proteininin hiperfosforilasyonu sonucu hücre içi iskelet yapısı (mikrotübüller) çöker. Bu durum, nöron içi madde taşınmasını engeller.
-3. Kolinerjik Hipotez: Öğrenme ve hafızada kritik rol oynayan 'Asetilkolin' nörotransmitterini sentezleyen nöronların kaybı, bilişsel gerilemenin temel nedenlerinden biridir.
-Genetik Risk Faktörleri:
-- Erken Başlangıçlı (Ailesel): APP, PSEN1 ve PSEN2 gen mutasyonları.
-- Geç Başlangıçlı (Sporadik): APOE-e4 aleli taşıyıcılığı riski artırır ancak kesin neden değildir.
+BÖLÜM 1: AKADEMİK BİLGİLER VE NEDENLERİ
+Soru: Alzheimer nedir?
+Cevap: Beyin hücrelerinin ölümüyle sonuçlanan, hafıza, düşünme ve davranış fonksiyonlarında azalmaya neden olan ilerleyici bir nörolojik hastalıktır.
+Soru: Hastalığın biyolojik nedeni nedir?
+Cevap: Beyinde 'Beta-amiloid' plaklarının birikmesi ve 'Tau' proteinlerinin düğümlenmesi sonucu sinir hücreleri arasındaki iletişim kopar.
+Soru: Genetik midir?
+Cevap: Erken başlangıçlı türünde genetik faktörler (APP, PSEN1) etkilidir. Geç başlangıçlı türünde APOE-e4 geni risk faktörüdür.
 
-BÖLÜM 2: FARMAKOLOJİK TEDAVİ (İLAÇLAR)
-Mevcut tedaviler hastalığı durdurmaz ancak semptomları yönetir:
-1. Asetilkolinesteraz İnhibitörleri: (Donepezil, Rivastigmine, Galantamine). Asetilkolin yıkımını engelleyerek sinaptik aralıkta kalma süresini uzatır. Hafif ve orta evrede etkilidir.
-2. NMDA Reseptör Antagonistleri: (Memantine). Glutamat eksitotoksisitesini (aşırı uyarılmaya bağlı hücre ölümü) önler. Orta ve ileri evrede kullanılır.
+BÖLÜM 2: GÜVENLİK VE ARABA KULLANIMI (ÇOK ÖNEMLİ)
+Soru: Alzheimer hastası araba kullanabilir mi?
+Cevap: HAYIR. Alzheimer hastaları reflekslerini, yön duygularını ve karar verme yetilerini kaybederler. Araba kullanmaları hem kendileri hem de trafiktekiler için ölümcül risk taşır. Ehliyetlerine el konulmalı ve araba anahtarları saklanmalıdır.
+Soru: Evden kaçıp kayboluyor, ne yapmalıyım?
+Cevap: Kapılara açıldığında ses çıkaran alarmlar takın. Kapı kilidini göz hizasından yukarıya monte edin. Cebine mutlaka adresinizin ve telefonunuzun yazdığı bir kart koyun.
 
-BÖLÜM 3: HASTALIK EVRELERİ VE BELİRTİLER
-1. Erken Evre (Hafif):
-   - Belirtiler: Yakın süreli hafıza kaybı, kelime bulma zorluğu (anomi), karmaşık görevleri (fatura ödeme) yönetememe, inisiyatif kaybı.
-   - Bakım İhtiyacı: Minimaldir. Hasta bağımsız yaşayabilir ancak hatırlatıcılara ihtiyaç duyar.
-2. Orta Evre:
-   - Belirtiler: Tanıdık yüzleri unutma, zaman ve mekan oryantasyonunun bozulması, mevsimsiz giyinme, şüphecilik (paranoya), amaçsız gezinme (wandering).
-   - Bakım İhtiyacı: Giyinme, banyo ve tuvalet gibi günlük yaşam aktivitelerinde (GYA) destek gerekir.
-3. İleri Evre (Şiddetli):
-   - Belirtiler: İletişim kaybı, yürüme ve oturma yetisinin kaybı, yutma güçlüğü (disfaji), idrar ve gaita inkontinansı (kaçırma).
-   - Bakım İhtiyacı: 7/24 tam bakım gerektirir.
+BÖLÜM 3: GÜNLÜK BAKIM VE HİJYEN
+Soru: Annem/Babam banyo yapmak istemiyor, sudan korkuyor. Ne yapmalıyım?
+Cevap: Onu zorlamayın ve "Yıkanman lazım" demeyin. "Hadi biraz rahatlayalım, ılık su iyi gelir" diyerek ikna edin. Banyonun sıcak olduğundan emin olun. Suyu kafasından aşağı birden dökmeyin, yavaşça alıştırın.
+Soru: Yemek yemeyi reddediyor.
+Cevap: Masa çok karmaşık olmasın. Çatal bıçak kullanamıyorsa elle yenebilen 'parmak gıdalar' (sandviç, meyve dilimi) hazırlayın. Beyaz tabakta renkli yemekler sunarak görmesini kolaylaştırın.
 
-BÖLÜM 4: HASTA İLE İLETİŞİM TEKNİKLERİ
-Validasyon (Onaylama) Yöntemi:
-- Kural: Hastanın gerçekliğini reddetmeyin.
-- Örnek: "Annem beni bekliyor" diyen (annesi ölmüş) bir hastaya "Annen öldü" demek onu her seferinde yeniden travmatize eder. Bunun yerine "Anneni çok özledin, bana en sevdiği yemeği anlatır mısın?" diyerek duygusunu onaylayın ve dikkati dağıtın.
-Sözlü İletişim Stratejileri:
-- Kısa ve Net Olun: Tek seferde tek komut verin. "Banyoya git, elini yıka ve gel" yerine, sırayla "Banyoya gidelim" deyin. O bitince diğerini söyleyin.
-- Seçenekleri Azaltın: "Ne giymek istersin?" yerine "Mavi gömleği mi, kırmızıyı mı istersin?" diye sorun.
-- 'Hayır' Demekten Kaçının: Yasaklamak yerine yönlendirin.
+BÖLÜM 4: DAVRANIŞSAL SORUNLAR VE PSİKOLOJİ
+Soru: Beni tanımıyor veya "Sen kimsin?" diyor.
+Cevap: Bu hastalığın bir parçasıdır, kişisel algılamayın. "Ben senin oğlunum/kızınım" diye tartışmaya girmeyin. Sakince sohbete devam edin ve ona güven verin.
+Soru: Akşamları çok huysuzlanıyor (Sundowning).
+Cevap: Akşam sendromunu önlemek için evi iyi aydınlatın. Gölgeler hastayı korkutabilir. Akşam saatlerinde çay/kahve (kafein) vermeyin.
+Soru: Olmayan şeyleri görüyor (Halüsinasyon).
+Cevap: Eğer gördüğü şey onu korkutmuyorsa bozmayın. Korkuyorsa "Orada kimse yok" diye inatlaşmayın. "Ben yanındayım, seni korurum" diyerek elini tutun.
 
-BÖLÜM 5: GÜNLÜK BAKIM VE HİJYEN SORUNLARI
-Banyo Yapma Reddi:
-- Neden: Sudan korkma, üşüme veya soyunmaktan utanma olabilir.
-- Çözüm: Banyonun sıcak olduğundan emin olun. "Yıkanma zamanı" yerine "Rahatlama zamanı" diyerek stresi azaltın. Gerekirse vücudunu parça parça silerek temizleyin.
-Yemek Yeme Sorunları:
-- Neden: Çatal-bıçak kullanmayı unutma, iştahsızlık veya yemeği ağızda tutma.
-- Çözüm: Parmak gıdalar (küçük sandviçler, dilim meyveler) sunun. Beyaz tabakta beyaz pilav gibi renk karmaşasından kaçının (kontrast renkler kullanın).
+BÖLÜM 5: İLAÇ VE TEDAVİ
+Soru: Hastalığın tedavisi var mı?
+Cevap: Kesin bir tedavisi yoktur, hastalık tamamen iyileşmez. Ancak Donepezil, Rivastigmine ve Memantine gibi ilaçlar belirtileri geçici olarak yavaşlatabilir.
 
-BÖLÜM 6: DAVRANIŞSAL SORUNLAR VE YÖNETİMİ
-Sundowning (Akşam Sendromu):
-- Tanım: Akşamüzeri artan huzursuzluk, kafa karışıklığı ve ajitasyon.
-- Yönetim: Evi akşam saatlerinde çok iyi aydınlatın (gölgeleri yok edin). Gündüz uyumasını sınırlayın. Akşam kafein vermeyin.
-Saldırganlık ve Ajitasyon:
-- Neden: Genellikle karşılanmamış bir ihtiyaç (ağrı, açlık, tuvalet) veya korku tetikler.
-- Yönetim: Sakin kalın, güvenli mesafe bırakın. Ortamdaki gürültüyü (TV) kapatın. Asla tartışmayın veya fiziksel güç kullanmayın.
-Halüsinasyonlar:
-- Yönetim: Gördüğü şey onu korkutmuyorsa müdahale etmeyin. Korkuyorsa "Orada kimse yok" diye inatlaşmayın, "Ben yanındayım, güvendesin" diyerek fiziksel temasla sakinleştirin.
-
-BÖLÜM 7: EV GÜVENLİĞİ VE DÜZENLEMELER
-Düşme Riski: Kaygan halıları kaldırın veya sabitleyin. Koridorlara ve banyoya gece lambaları takın.
-Gezinme ve Kaybolma: Kapılara, açıldığında ses çıkaran basit ziller takın. Hastanın cebine mutlaka kimlik ve iletişim bilgilerinin olduğu bir kart koyun.
-Mutfak Güvenliği: Ocak düğmelerine çocuk kilidi takın. Bıçak, makas, ilaç ve temizlik malzemelerini kilitli dolaplarda saklayın.
-
-BÖLÜM 8: BAKIM VEREN SAĞLIĞI VE HUKUKİ SÜREÇLER
-Tükenmişlik Sendromu: Bakım veren kişilerde depresyon riski yüksektir. "Süper kahraman" olmaya çalışmayın, profesyonel yardım veya aile desteği isteyin.
-Hukuki Konular: Hastalık teşhisi konulur konulmaz, hasta henüz karar verme yetisini kaybetmemişken vasi tayini ve noter işlemleri (vekaletname) tamamlanmalıdır.
+BÖLÜM 6: BAKIM VERENİN YÜKÜ
+Soru: Kendimi çok yorgun ve tükenmiş hissediyorum.
+Cevap: Bu çok normaldir. Her şeyi tek başınıza yapmaya çalışmayın. Aileden destek isteyin veya profesyonel yardım alın. Siz iyi olmazsanız hastanıza da bakamazsınız.
     """
 
     dosya_adi = "alzheimer_veri.txt"
     with open(dosya_adi, "w", encoding="utf-8") as f:
         f.write(metin)
 
-    print(f"✅ Gelişmiş Ansiklopedi verisi '{dosya_adi}' dosyasına yazıldı.")
+    print(f"✅ MEGA VERİ SETİ OLUŞTURULDU: {dosya_adi}")
 
 if __name__ == "__main__":
     veri_dosyasi_olustur()
