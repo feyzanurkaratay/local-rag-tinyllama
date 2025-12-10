@@ -2,54 +2,61 @@ import os
 
 def veri_dosyasi_olustur():
     """
-    TinyLlama için 'Mega Ansiklopedi' verisi. 
-    Araba kullanımı, banyo, yemek, saldırganlık vb. her şey burada yazıyor.
+    RAG sistemi için SADELEŞTİRİLMİŞ (Halk Dili) Alzheimer verisi.
+    Tıbbi terimlerden arındırılmış, anlaşılır versiyon.
     """
     metin = """
-BAŞLIK: ALZHEIMER HASTALIĞI HAKKINDA HER ŞEY (KAPSAMLI REHBER)
+BAŞLIK: ALZHEIMER HASTALIĞI: HERKES İÇİN ANLAŞILIR REHBER
 
-BÖLÜM 1: AKADEMİK BİLGİLER VE NEDENLERİ
-Soru: Alzheimer nedir?
-Cevap: Beyin hücrelerinin ölümüyle sonuçlanan, hafıza, düşünme ve davranış fonksiyonlarında azalmaya neden olan ilerleyici bir nörolojik hastalıktır.
-Soru: Hastalığın biyolojik nedeni nedir?
-Cevap: Beyinde 'Beta-amiloid' plaklarının birikmesi ve 'Tau' proteinlerinin düğümlenmesi sonucu sinir hücreleri arasındaki iletişim kopar.
-Soru: Genetik midir?
-Cevap: Erken başlangıçlı türünde genetik faktörler (APP, PSEN1) etkilidir. Geç başlangıçlı türünde APOE-e4 geni risk faktörüdür.
+BÖLÜM 1: ALZHEIMER NEDİR? (BASİT ANLATIM)
+Tanım: Alzheimer, beynin yavaş yavaş küçüldüğü ve hafızanın zayıfladığı bir hastalıktır. Unutkanlıkla başlar, zamanla günlük işleri yapmayı zorlaştırır.
+Neden Olur?: Beyinde bazı proteinler (plaklar) birikir ve bu durum beyin hücrelerinin birbirleriyle konuşmasını engeller. Hücreler zamanla ölür.
+Genetik mi?: Ailede varsa risk artabilir ama kesinlikle çocuğa geçer diye bir kural yoktur. Yaşlılık en büyük risktir.
 
-BÖLÜM 2: GÜVENLİK VE ARABA KULLANIMI (ÇOK ÖNEMLİ)
-Soru: Alzheimer hastası araba kullanabilir mi?
-Cevap: HAYIR. Alzheimer hastaları reflekslerini, yön duygularını ve karar verme yetilerini kaybederler. Araba kullanmaları hem kendileri hem de trafiktekiler için ölümcül risk taşır. Ehliyetlerine el konulmalı ve araba anahtarları saklanmalıdır.
-Soru: Evden kaçıp kayboluyor, ne yapmalıyım?
-Cevap: Kapılara açıldığında ses çıkaran alarmlar takın. Kapı kilidini göz hizasından yukarıya monte edin. Cebine mutlaka adresinizin ve telefonunuzun yazdığı bir kart koyun.
+BÖLÜM 2: İLAÇ VE TEDAVİ (BASİTÇE)
+Tedavisi Var mı?: Hastalığı tamamen geçiren bir ilaç henüz yok. Ancak ilerlemesini yavaşlatan ve hastayı rahatlatan ilaçlar var.
+İlaçlar Ne Yapar?:
+1. Hafıza İlaçları (Donepezil vb.): Beyindeki haberleşme maddelerini artırarak hafızayı geçici olarak güçlendirir.
+2. Sakinleştiriciler (Memantine vb.): Beynin aşırı yorulmasını engeller, hastayı daha sakin tutar.
+Önemli Not: İlacın dozu ve saati çok önemlidir. Doktorun verdiği saatlerin dışına çıkılmamalıdır. İlaç rejimi yerine, ilacın düzenli kullanımı takip edilmelidir.
 
-BÖLÜM 3: GÜNLÜK BAKIM VE HİJYEN
-Soru: Annem/Babam banyo yapmak istemiyor, sudan korkuyor. Ne yapmalıyım?
-Cevap: Onu zorlamayın ve "Yıkanman lazım" demeyin. "Hadi biraz rahatlayalım, ılık su iyi gelir" diyerek ikna edin. Banyonun sıcak olduğundan emin olun. Suyu kafasından aşağı birden dökmeyin, yavaşça alıştırın.
-Soru: Yemek yemeyi reddediyor.
-Cevap: Masa çok karmaşık olmasın. Çatal bıçak kullanamıyorsa elle yenebilen 'parmak gıdalar' (sandviç, meyve dilimi) hazırlayın. Beyaz tabakta renkli yemekler sunarak görmesini kolaylaştırın.
+BÖLÜM 3: BELİRTİLER VE EVRELER
+1. Başlangıç: İsimleri unutma, "Ocağı kapattım mı?" diye sürekli kontrol etme, para hesabını karıştırma.
+2. Orta Dönem: Yolu kaybetme, mevsimsiz giyinme (yazın mont giymek gibi), banyo yapmayı istememe, "Sen kimsin?" diye sorma.
+3. İleri Dönem: Konuşamama, yemeği yutamama, tuvaletini tutamama. Tam bakım gerekir.
 
-BÖLÜM 4: DAVRANIŞSAL SORUNLAR VE PSİKOLOJİ
-Soru: Beni tanımıyor veya "Sen kimsin?" diyor.
-Cevap: Bu hastalığın bir parçasıdır, kişisel algılamayın. "Ben senin oğlunum/kızınım" diye tartışmaya girmeyin. Sakince sohbete devam edin ve ona güven verin.
-Soru: Akşamları çok huysuzlanıyor (Sundowning).
-Cevap: Akşam sendromunu önlemek için evi iyi aydınlatın. Gölgeler hastayı korkutabilir. Akşam saatlerinde çay/kahve (kafein) vermeyin.
-Soru: Olmayan şeyleri görüyor (Halüsinasyon).
-Cevap: Eğer gördüğü şey onu korkutmuyorsa bozmayın. Korkuyorsa "Orada kimse yok" diye inatlaşmayın. "Ben yanındayım, seni korurum" diyerek elini tutun.
+BÖLÜM 4: HASTAYLA NASIL KONUŞMALIYIZ?
+Altın Kural: Asla tartışmayın. "Yanlış söylüyorsun" demeyin.
+Örnek: Hasta "Annem beni bekliyor" derse (annesi vefat etmiş olsa bile), "Annen öldü" demeyin. "Anneni özledin galiba, haydi bana ondan bahset" diyerek suyuna gidin.
+Ses Tonu: Yumuşak ve sakin konuşun. Bebekle konuşur gibi değil, saygılı bir yetişkinle konuşur gibi davranın.
+Basit Cümleler: "Hadi kalk, dişini fırçala, sonra pijamanı giy" derseniz kafası karışır. Sadece "Hadi kalk" deyin. O bitince "Şimdi dişini fırçala" deyin.
 
-BÖLÜM 5: İLAÇ VE TEDAVİ
-Soru: Hastalığın tedavisi var mı?
-Cevap: Kesin bir tedavisi yoktur, hastalık tamamen iyileşmez. Ancak Donepezil, Rivastigmine ve Memantine gibi ilaçlar belirtileri geçici olarak yavaşlatabilir.
+BÖLÜM 5: GÜNLÜK SORUNLAR VE ÇÖZÜMLER
+Banyo Yapmak İstemiyor:
+- Neden: Sudan korkuyor veya üşüyor olabilir.
+- Çözüm: "Yıkanman lazım" demeyin. "Hadi ılık suyla rahatlayalım" diyerek ikna edin. Suyu kafasından aşağı birden dökmeyin.
+Yemek Yemiyor:
+- Çözüm: Belki çatal kullanmayı unuttu. Eline alıp yiyebileceği küçük sandviçler veya dilimlenmiş meyveler verin. Tabağı çok doldurmayın.
 
-BÖLÜM 6: BAKIM VERENİN YÜKÜ
-Soru: Kendimi çok yorgun ve tükenmiş hissediyorum.
-Cevap: Bu çok normaldir. Her şeyi tek başınıza yapmaya çalışmayın. Aileden destek isteyin veya profesyonel yardım alın. Siz iyi olmazsanız hastanıza da bakamazsınız.
+BÖLÜM 6: HUYSUZLUK VE SALDIRGANLIK
+Neden Kızıyor?: Genellikle bir yeri ağrıyordur, tuvaleti gelmiştir veya korkmuştur ama bunu söyleyemediği için bağırır.
+Ne Yapmalı?: Sakin olun. Üzerine gitmeyin. Ortamdaki gürültüyü (TV, radyo) kapatın. Elini tutarak güven verin.
+Akşam Huysuzluğu (Güneş Batarken): Akşamları kafaları daha çok karışır. Evi akşamüzeri iyice aydınlatın, karanlık köşe kalmasın. Akşam çay-kahve vermeyin.
+
+BÖLÜM 7: EVDE GÜVENLİK
+Düşmemesi İçin: Kaygan halıları kaldırın. Gece tuvalete kalkarsa diye koridora gece lambası takın.
+Kaybolmaması İçin: Kapıya zil takın, açılınca haberiniz olsun. Cebine mutlaka adresinizin yazdığı bir kağıt koyun.
+Tehlikeli Şeyler: İlaçları, bıçakları ve temizlik malzemelerini kilitli dolaplara koyun.
+
+BÖLÜM 8: BAKIM VEREN KİŞİ (SİZ)
+Kendinizi Unutmayın: Bu çok zor bir görev. "Her şeyi ben yaparım" demeyin, yardım isteyin. Siz hasta olursanız ona kimse bakamaz.
     """
 
     dosya_adi = "alzheimer_veri.txt"
     with open(dosya_adi, "w", encoding="utf-8") as f:
         f.write(metin)
 
-    print(f"✅ MEGA VERİ SETİ OLUŞTURULDU: {dosya_adi}")
+    print(f"✅ SADELEŞTİRİLMİŞ VERİ DOSYASI OLUŞTURULDU: {dosya_adi}")
 
 if __name__ == "__main__":
     veri_dosyasi_olustur()
