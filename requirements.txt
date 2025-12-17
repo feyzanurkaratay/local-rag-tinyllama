@@ -1,8 +1,18 @@
-langchain==0.1.10
-langchain-community==0.0.25
-langchain-core==0.1.30
-sentence-transformers
+# Temel sistem
+torch
+
+# Hugging Face ailesi (Bunların hepsi güncel olmalı ki kavga etmesinler)
+transformers>=4.41.0
+huggingface_hub>=0.23.0
+sentence-transformers>=3.0.0
+accelerate
+
+# Langchain (Güncel versiyonlar yeni HF ile uyumludur)
+langchain
+langchain-community
+langchain-core
+
+# Bizim ekstralar
 faiss-cpu
 deep_translator
 gradio
-huggingface_hub==0.19.4
