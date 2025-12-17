@@ -1,18 +1,10 @@
-# Temel sistem
 torch
-
-# Hugging Face Ailesi (API hatası vermemesi için YENİ olmalı)
-huggingface-hub>=0.23.0
-transformers>=4.41.0
-accelerate>=0.30.0
-sentence-transformers>=3.0.0
-
-# LangChain Ailesi (Kodun çalışması için ESKİ ve SAĞLAM sürüm olmalı)
-langchain==0.1.20
-langchain-community==0.0.38
-langchain-core==0.1.52
-
-# Araçlar
+transformers==4.35.2
+huggingface-hub==0.19.4
+sentence-transformers==2.2.2
+langchain==0.0.350
+langchain-community==0.0.3
+langchain-core==0.1.1
 faiss-cpu
 deep_translator
-gradio
+gradio==4.12.0
