@@ -3,6 +3,6 @@ langchain-community==0.0.25
 langchain-core==0.1.30
 sentence-transformers
 faiss-cpu
-huggingface_hub
 deep_translator
 gradio
+huggingface_hub==0.19.4
