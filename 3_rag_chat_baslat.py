@@ -1,91 +1,106 @@
 import gradio as gr
-import os
-from huggingface_hub import InferenceClient
-
-# --- GÜNCEL İMPORT ADRESLERİ (2025 STANDARDI) ---
-# Yeni versiyonlarda "langchain_community" kullanmak şart.
+import torch
+from transformers import pipeline
+from langchain_community.llms import HuggingFacePipeline
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_community.document_loaders import TextLoader
-# TextSplitter hala ana pakette, yeri burası:
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
 from deep_translator import GoogleTranslator
+import os
+import sys
 
 # --- 1. AYARLAR ---
-print("🚀 Sistem Başlatılıyor... (GÜNCEL VERSİYON MODU)")
+print("🚀 Sistem TinyLlama ile başlatılıyor... (YEREL MOD)")
 
-# ŞİFRE (Korsan Yöntem)
-kisim1 = "hf_"
-kisim2 = "mGQNVdfnSwEVHeVOSakUtKWgdjMftiJhFo" 
-hf_token = kisim1 + kisim2
+model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
-# Modeli Çağıran İstemci (API Hatası vermez)
-client = InferenceClient(model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", token=hf_token)
+# Model yerel olarak indirilir ve çalıştırılır
+pipe = pipeline(
+    "text-generation",
+    model=model_id,
+    torch_dtype=torch.float32,
+    device_map="auto",
+    max_new_tokens=256,
+    do_sample=True,
+    temperature=0.3, # Biraz doğal konuşsun
+    top_p=0.90,
+    repetition_penalty=1.2
+)
+llm = HuggingFacePipeline(pipeline=pipe)
 
-# Hafıza için Embedding
 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
-# --- 2. HAFIZA ---
-if not os.path.exists("alzheimer_veri.txt"):
-    with open("alzheimer_veri.txt", "w") as f: f.write("Veri yok.")
+# --- 2. HAFIZA KONTROLÜ ---
+print("📚 Hafıza yükleniyor...")
+if not os.path.exists("faiss_index_alzheimer"):
+    print("❌ HATA: Veritabanı klasörü bulunamadı!")
+    print("Lütfen önce 2_veritabani_olustur.py dosyasını çalıştırın.")
+    sys.exit()
 
-loader = TextLoader("alzheimer_veri.txt", encoding="utf-8")
-docs = loader.load()
+vector_store = FAISS.load_local("faiss_index_alzheimer", embedding_model, allow_dangerous_deserialization=True)
+print("✅ Hafıza hazır!")
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-parcalar = text_splitter.split_documents(docs)
+# --- 3. PROMPT (İNGİLİZCE + BASİT DİL EMRİ) ---
+template = """<|system|>
+You are a helpful and friendly assistant. 
+Use the Context below to answer the Question.
+IMPORTANT: Use very simple, easy-to-understand language. Avoid medical jargon. 
+Explain it as if you are talking to a friend.
+If the answer is not in the context, say "I don't know".
 
-vector_store = FAISS.from_documents(parcalar, embedding_model)
+Context:
+{context}
+</s>
+<|user|>
+Question: {question}
+</s>
+<|assistant|>
+"""
 
-# --- 3. CEVAP FONKSİYONU ---
+PROMPT = PromptTemplate(template=template, input_variables=["context", "question"])
+
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=vector_store.as_retriever(search_kwargs={"k": 2}),
+    chain_type_kwargs={"prompt": PROMPT}
+)
+
+# --- 4. TERCÜMANLI CEVAP FONKSİYONU ---
 def cevapla(soru_tr):
     if not soru_tr:
         return ""
     
     try:
-        # 1. Çeviri (TR -> EN)
+        # 1. Türkçeden İngilizceye çevir
+        print(f"🇹🇷 Gelen Soru: {soru_tr}")
         soru_en = GoogleTranslator(source='tr', target='en').translate(soru_tr)
-        
-        # 2. Hafızadan Bul
-        benzer_belgeler = vector_store.similarity_search(soru_en, k=2)
-        baglam = "\n".join([doc.page_content for doc in benzer_belgeler])
-        
-        # 3. Prompt
-        prompt = f"""<|system|>
-You are a helpful assistant. 
-Use the Context below to answer the Question.
-IMPORTANT: Use very simple, easy-to-understand language. Avoid medical jargon.
-If the answer is not in the context, say "I don't know".
+        print(f"🇺🇸 Çevrilen Soru: {soru_en}")
 
-Context:
-{baglam}
-</s>
-<|user|>
-Question: {soru_en}
-</s>
-<|assistant|>
-"""
+        # 2. Modele İngilizce sor
+        ham_cevap = qa_chain.invoke({"query": soru_en})
+        cevap_en = ham_cevap["result"]
         
-        # 4. API İsteği
-        cevap_objesi = client.text_generation(prompt, max_new_tokens=256, temperature=0.1, top_p=0.9)
-        cevap_en = str(cevap_objesi)
+        # Temizlik
+        if "<|assistant|>" in cevap_en:
+            cevap_en = cevap_en.split("<|assistant|>")[-1]
         
-        # 5. Çeviri (EN -> TR)
+        # 3. Cevabı Türkçeye çevir
         cevap_tr = GoogleTranslator(source='en', target='tr').translate(cevap_en)
         
         return cevap_tr
-
     except Exception as e:
-        return f"Hata: {str(e)}"
+        return f"Hata oluştu: {str(e)}"
 
-# --- 4. ARAYÜZ ---
+# --- 5. ARAYÜZ ---
 arayuz = gr.Interface(
     fn=cevapla,
-    inputs=gr.Textbox(lines=2, placeholder="Örn: İlaçları nasıl vermeliyim?"),
-    outputs=gr.Textbox(label="Cevap"),
-    title="🧠 Alzheimer Asistanı",
-    description="TinyLlama API - Final Sürüm"
+    inputs=gr.Textbox(lines=2, placeholder="Örn: Annem banyo yapmak istemiyor, ne yapmalıyım?"),
+    outputs=gr.Textbox(label="Asistanın Cevabı"),
+    title="🧠 Alzheimer Asistanı (Yerel Versiyon)",
+    description="TinyLlama modeli bilgisayarınızda çalışır, tercüman aracılığıyla Türkçe konuşur."
 )
 
 if __name__ == "__main__":
-    arayuz.launch()
+    arayuz.launch(inbrowser=True)
