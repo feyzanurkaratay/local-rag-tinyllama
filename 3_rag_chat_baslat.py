@@ -1,22 +1,25 @@
 import gradio as gr
 import os
 from huggingface_hub import InferenceClient
-# DİKKAT: LangChain 0.0.350 için eski import yolları (Community yok)
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.document_loaders import TextLoader
+
+# --- GÜNCEL İMPORT ADRESLERİ (2025 STANDARDI) ---
+# Yeni versiyonlarda "langchain_community" kullanmak şart.
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import TextLoader
+# TextSplitter hala ana pakette, yeri burası:
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from deep_translator import GoogleTranslator
 
 # --- 1. AYARLAR ---
-print("🚀 Sistem Başlatılıyor... (SAF API + ESKİ LANGCHAIN)")
+print("🚀 Sistem Başlatılıyor... (GÜNCEL VERSİYON MODU)")
 
 # ŞİFRE (Korsan Yöntem)
 kisim1 = "hf_"
 kisim2 = "mGQNVdfnSwEVHeVOSakUtKWgdjMftiJhFo" 
 hf_token = kisim1 + kisim2
 
-# Modeli Çağıran İstemci
+# Modeli Çağıran İstemci (API Hatası vermez)
 client = InferenceClient(model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", token=hf_token)
 
 # Hafıza için Embedding
@@ -81,7 +84,7 @@ arayuz = gr.Interface(
     inputs=gr.Textbox(lines=2, placeholder="Örn: İlaçları nasıl vermeliyim?"),
     outputs=gr.Textbox(label="Cevap"),
     title="🧠 Alzheimer Asistanı",
-    description="TinyLlama API Modu"
+    description="TinyLlama API - Final Sürüm"
 )
 
 if __name__ == "__main__":
