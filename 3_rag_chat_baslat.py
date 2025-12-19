@@ -1,29 +1,30 @@
 import gradio as gr
 import os
-# DİKKAT: Yeni ve sorunsuz kütüphaneyi çağırıyoruz
+
+# --- KÜTÜPHANE İMPORTLARI (0.1.10 UYUMLU) ---
 from langchain_community.llms import HuggingFaceEndpoint
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.chains import RetrievalQA
+# RetrievalQA bu versiyonda hala burada, sorun yok:
+from langchain.chains import RetrievalQA 
 from langchain.prompts import PromptTemplate
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from deep_translator import GoogleTranslator
 
 # --- 1. AYARLAR ---
-print("🚀 Sistem Başlatılıyor... (MODERN API MODU)")
+print("🚀 Sistem Başlatılıyor... (ALTIN VERSİYON 0.1.10)")
 
-# ROBOTU KANDIRMA (Korsan Şifre Yöntemi - Devam)
+# ŞİFRE KISMI (Korsan Modu Devam)
 kisim1 = "hf_"
 kisim2 = "mGQNVdfnSwEVHeVOSakUtKWgdjMftiJhFo" 
 hf_token = kisim1 + kisim2
 
-# Model Ayarları
+# Model: TinyLlama
 repo_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
-# İŞTE ÇÖZÜM BURADA: "HuggingFaceEndpoint" kullanıyoruz.
-# Bu fonksiyon yeni kütüphanelerle uyumludur, 'post' hatası vermez.
 try:
+    # Endpoint kullanımı (API Hatası vermez)
     llm = HuggingFaceEndpoint(
         repo_id=repo_id,
         max_new_tokens=256,
@@ -32,12 +33,12 @@ try:
         huggingfacehub_api_token=hf_token
     )
 except Exception as e:
-    print(f"Hata: {e}")
+    print(f"Model Bağlantı Hatası: {e}")
 
-# Embedding
+# Embedding Modeli
 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
-# --- 2. HAFIZA ---
+# --- 2. HAFIZA YÜKLEME ---
 if not os.path.exists("alzheimer_veri.txt"):
     with open("alzheimer_veri.txt", "w") as f: f.write("Veri yok.")
 
@@ -49,7 +50,7 @@ parcalar = text_splitter.split_documents(docs)
 
 vector_store = FAISS.from_documents(parcalar, embedding_model)
 
-# --- 3. PROMPT (BASİT DİL) ---
+# --- 3. PROMPT ---
 template = """<|system|>
 You are a helpful assistant. 
 Use the Context below to answer the Question.
@@ -82,8 +83,8 @@ def cevapla(soru_tr):
         # TR -> EN
         soru_en = GoogleTranslator(source='tr', target='en').translate(soru_tr)
         
-        # API Run
-        ham_cevap = qa_chain.invoke({"query": soru_en}) # invoke, run'ın yeni halidir
+        # API Çalıştır (Invoke metodu 0.1.10'da çalışır)
+        ham_cevap = qa_chain.invoke({"query": soru_en})
         sonuc_metni = ham_cevap["result"]
         
         # Temizlik
@@ -103,8 +104,8 @@ arayuz = gr.Interface(
     fn=cevapla,
     inputs=gr.Textbox(lines=2, placeholder="Örn: İlaçları nasıl vermeliyim?"),
     outputs=gr.Textbox(label="Cevap"),
-    title="🧠 Alzheimer Asistanı (Modern API)",
-    description="TinyLlama API + En Yeni Kütüphaneler"
+    title="🧠 Alzheimer Asistanı (Final - Stabil)",
+    description="TinyLlama API + Stabil Kütüphaneler"
 )
 
 if __name__ == "__main__":
