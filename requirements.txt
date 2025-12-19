@@ -1,5 +1,4 @@
-langchain
-langchain-community
+langchain==0.0.350
 huggingface_hub
 sentence-transformers
 faiss-cpu
