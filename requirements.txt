@@ -1,6 +1,6 @@
-huggingface_hub
+langchain
 langchain-community
-langchain-core
+huggingface_hub
 sentence-transformers
 faiss-cpu
 deep_translator
