@@ -1,12 +1,7 @@
-# Bu versiyonlar birbiriyle mükemmel uyumludur.
-# Ne eksik, ne fazla.
-langchain==0.1.10
-langchain-community==0.0.25
-langchain-core==0.1.30
-huggingface-hub>=0.20.0
-transformers>=4.38.0
-accelerate>=0.27.0
-sentence-transformers>=2.5.0
+huggingface_hub
+langchain-community
+langchain-core
+sentence-transformers
 faiss-cpu
 deep_translator
 gradio
