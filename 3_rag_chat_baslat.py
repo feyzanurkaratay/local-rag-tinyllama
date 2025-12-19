@@ -11,11 +11,10 @@ import os
 import sys
 
 # --- 1. AYARLAR ---
-print("🚀 Sistem TinyLlama ile başlatılıyor... (YEREL MOD)")
+print("🚀 Sistem TinyLlama ile başlatılıyor... (YEREL MOD - DÜZELTİLDİ)")
 
 model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
-# Model yerel olarak indirilir ve çalıştırılır
 pipe = pipeline(
     "text-generation",
     model=model_id,
@@ -23,7 +22,7 @@ pipe = pipeline(
     device_map="auto",
     max_new_tokens=256,
     do_sample=True,
-    temperature=0.3, # Biraz doğal konuşsun
+    temperature=0.3,
     top_p=0.90,
     repetition_penalty=1.2
 )
@@ -38,10 +37,18 @@ if not os.path.exists("faiss_index_alzheimer"):
     print("Lütfen önce 2_veritabani_olustur.py dosyasını çalıştırın.")
     sys.exit()
 
-vector_store = FAISS.load_local("faiss_index_alzheimer", embedding_model, allow_dangerous_deserialization=True)
+# DÜZELTME BURADA YAPILDI:
+# 'allow_dangerous_deserialization=True' kısmını kaldırdık.
+# Artık senin bilgisayarındaki eski sürümle de çalışır.
+try:
+    vector_store = FAISS.load_local("faiss_index_alzheimer", embedding_model)
+except TypeError:
+    # Eğer çok yeni sürüm varsa ve güvenlik uyarısı verirse diye önlem:
+    vector_store = FAISS.load_local("faiss_index_alzheimer", embedding_model, allow_dangerous_deserialization=True)
+
 print("✅ Hafıza hazır!")
 
-# --- 3. PROMPT (İNGİLİZCE + BASİT DİL EMRİ) ---
+# --- 3. PROMPT ---
 template = """<|system|>
 You are a helpful and friendly assistant. 
 Use the Context below to answer the Question.
@@ -67,18 +74,18 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": PROMPT}
 )
 
-# --- 4. TERCÜMANLI CEVAP FONKSİYONU ---
+# --- 4. CEVAP FONKSİYONU ---
 def cevapla(soru_tr):
     if not soru_tr:
         return ""
     
     try:
-        # 1. Türkçeden İngilizceye çevir
+        # 1. TR -> EN
         print(f"🇹🇷 Gelen Soru: {soru_tr}")
         soru_en = GoogleTranslator(source='tr', target='en').translate(soru_tr)
         print(f"🇺🇸 Çevrilen Soru: {soru_en}")
 
-        # 2. Modele İngilizce sor
+        # 2. Model Cevabı
         ham_cevap = qa_chain.invoke({"query": soru_en})
         cevap_en = ham_cevap["result"]
         
@@ -86,7 +93,7 @@ def cevapla(soru_tr):
         if "<|assistant|>" in cevap_en:
             cevap_en = cevap_en.split("<|assistant|>")[-1]
         
-        # 3. Cevabı Türkçeye çevir
+        # 3. EN -> TR
         cevap_tr = GoogleTranslator(source='en', target='tr').translate(cevap_en)
         
         return cevap_tr
@@ -99,7 +106,7 @@ arayuz = gr.Interface(
     inputs=gr.Textbox(lines=2, placeholder="Örn: Annem banyo yapmak istemiyor, ne yapmalıyım?"),
     outputs=gr.Textbox(label="Asistanın Cevabı"),
     title="🧠 Alzheimer Asistanı (Yerel Versiyon)",
-    description="TinyLlama modeli bilgisayarınızda çalışır, tercüman aracılığıyla Türkçe konuşur."
+    description="TinyLlama modeli bilgisayarınızda çalışır."
 )
 
 if __name__ == "__main__":
