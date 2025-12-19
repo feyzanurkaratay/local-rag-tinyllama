@@ -3,7 +3,6 @@ import os
 def veri_dosyasi_olustur():
     """
     RAG sistemi için SADELEŞTİRİLMİŞ (Halk Dili) Alzheimer verisi.
-    Tıbbi terimlerden arındırılmış, anlaşılır versiyon.
     """
     metin = """
 BAŞLIK: ALZHEIMER HASTALIĞI: HERKES İÇİN ANLAŞILIR REHBER
@@ -29,7 +28,6 @@ BÖLÜM 4: HASTAYLA NASIL KONUŞMALIYIZ?
 Altın Kural: Asla tartışmayın. "Yanlış söylüyorsun" demeyin.
 Örnek: Hasta "Annem beni bekliyor" derse (annesi vefat etmiş olsa bile), "Annen öldü" demeyin. "Anneni özledin galiba, haydi bana ondan bahset" diyerek suyuna gidin.
 Ses Tonu: Yumuşak ve sakin konuşun. Bebekle konuşur gibi değil, saygılı bir yetişkinle konuşur gibi davranın.
-Basit Cümleler: "Hadi kalk, dişini fırçala, sonra pijamanı giy" derseniz kafası karışır. Sadece "Hadi kalk" deyin. O bitince "Şimdi dişini fırçala" deyin.
 
 BÖLÜM 5: GÜNLÜK SORUNLAR VE ÇÖZÜMLER
 Banyo Yapmak İstemiyor:
@@ -47,6 +45,7 @@ BÖLÜM 7: EVDE GÜVENLİK
 Düşmemesi İçin: Kaygan halıları kaldırın. Gece tuvalete kalkarsa diye koridora gece lambası takın.
 Kaybolmaması İçin: Kapıya zil takın, açılınca haberiniz olsun. Cebine mutlaka adresinizin yazdığı bir kağıt koyun.
 Tehlikeli Şeyler: İlaçları, bıçakları ve temizlik malzemelerini kilitli dolaplara koyun.
+Araba Kullanımı: Kesinlikle tehlikelidir. Refleksler zayıfladığı için araba kullanmalarına izin verilmemelidir.
 
 BÖLÜM 8: BAKIM VEREN KİŞİ (SİZ)
 Kendinizi Unutmayın: Bu çok zor bir görev. "Her şeyi ben yaparım" demeyin, yardım isteyin. Siz hasta olursanız ona kimse bakamaz.
